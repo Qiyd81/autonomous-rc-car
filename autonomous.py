@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """Run the car autonomously"""
 import time
 import sys
@@ -16,8 +16,8 @@ def autonomous_control(model):
         camera.resolution = configuration.PICAMERA_RESOLUTION
         camera.framerate = configuration.PICAMERA_FRAMERATE
         time.sleep(configuration.PICAMERA_WARM_UP_TIME)
-        pwm = motor_driver_helper.get_pwm_imstance()
-        motor_driver_helper.start_pwm(pwm)
+        left_pwm, right_pwm = motor_driver_helper.get_pwm_imstance()
+        motor_driver_helper.start_pwm(left_pwm, right_pwm)
         forward_cycle_count = left_cycle_count = right_cycle_count = 0
         should_brake = False
 
@@ -30,24 +30,24 @@ def autonomous_control(model):
             if direction == 'forward':
                 should_brake = True
                 left_cycle_count = right_cycle_count = 0
-                forward_cycle_count = reduce_speed(pwm, forward_cycle_count)
-                motor_driver_helper.set_front_motor_to_idle()
+                forward_cycle_count = reduce_speed(left_pwm, right_pwm, forward_cycle_count)
+                #motor_driver_helper.set_front_motor_to_idle()
                 motor_driver_helper.set_forward_mode()
             elif direction == 'left':
                 should_brake = True
                 forward_cycle_count = right_cycle_count = 0
-                left_cycle_count = increase_speed_on_turn(pwm, left_cycle_count)
+                left_cycle_count = increase_speed_on_turn(left_pwm, right_pwm, left_cycle_count)
                 motor_driver_helper.set_left_mode()
                 motor_driver_helper.set_forward_mode()
             elif direction == 'right':
                 should_brake = True
                 forward_cycle_count = left_cycle_count = 0
-                right_cycle_count = increase_speed_on_turn(pwm, right_cycle_count)
+                right_cycle_count = increase_speed_on_turn(left_pwm, right_pwm, right_cycle_count)
                 motor_driver_helper.set_right_mode()
                 motor_driver_helper.set_forward_mode()
             elif direction == 'reverse':
                 should_brake = True
-                motor_driver_helper.set_front_motor_to_idle()
+                #motor_driver_helper.set_front_motor_to_idle()
                 motor_driver_helper.set_reverse_mode()
             else:
                 if should_brake:
@@ -57,27 +57,27 @@ def autonomous_control(model):
                     should_brake = False
                 motor_driver_helper.set_idle_mode()
                 forward_cycle_count = left_cycle_count = right_cycle_count = 0
-                motor_driver_helper.change_pwm_duty_cycle(pwm, 100)
+                motor_driver_helper.change_pwm_duty_cycle(left_pwm, right_pwm, 100)
             print(direction)
 
-def increase_speed_on_turn(pwm, turn_count):
+def increase_speed_on_turn(left_pwm, right_pwm, turn_count):
     """Increase speed based on the turn count"""
     turn_count = turn_count + 1
     if turn_count > 4:
         print("Speed Increased")
-        motor_driver_helper.change_pwm_duty_cycle(pwm, 100)
+        motor_driver_helper.change_pwm_duty_cycle(left_pwm, right_pwm, 100)
     else:
-        motor_driver_helper.change_pwm_duty_cycle(pwm, 85)
+        motor_driver_helper.change_pwm_duty_cycle(left_pwm, right_pwm, 85)
     return turn_count
 
-def reduce_speed(pwm, turn_count):
+def reduce_speed(left_pwm, right_pwm, turn_count):
     """Reduce speed based on the turn count"""
     turn_count = turn_count + 1
     if turn_count < 3:
-        motor_driver_helper.change_pwm_duty_cycle(pwm, 100)
+        motor_driver_helper.change_pwm_duty_cycle(left_pwm, right_pwm, 100)
     else:
         print("Speed reduced - Forward")
-        motor_driver_helper.change_pwm_duty_cycle(pwm, 85)
+        motor_driver_helper.change_pwm_duty_cycle(left_pwm, right_pwm, 85)
     return turn_count
 
 def main():

@@ -18,8 +18,9 @@ def load_images_to_array(classification_label_and_values):
     training_image_array = array([zeros(IMAGE_DIMENSIONS[0] * IMAGE_DIMENSIONS[1])])
     training_image_value = array([[0, 0, 0, 0, 0]])
     print("Loading images to array...")
-    for class_label, class_value in classification_label_and_values.iteritems():
+    for class_label, class_value in classification_label_and_values.items():
         for filename in glob.glob("./"+class_label+"/*"):
+            print("filename as: ", filename)
             image_array = imread(filename, flatten=True)
             resized_image_array = imresize(image_array, IMAGE_DIMENSIONS)
             training_image_array = r_[training_image_array, [resized_image_array.flatten()]]
